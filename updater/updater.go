@@ -14,7 +14,7 @@ const (
 )
 
 type Updater struct {
-	Backend          *remoteBackend
+	Backend          *tfRemoteBackend
 	Tfc              *tfcloud.TfCloud
 	CurrentVersion   SemanticVersion
 	RequiredVersions []*RequiredVersion

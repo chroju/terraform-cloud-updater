@@ -8,16 +8,20 @@ import (
 	"strings"
 
 	hcl "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/hashicorp/hcl2/gohcl"
-	"github.com/hashicorp/hcl2/hclparse"
 )
 
-type remoteBackend struct {
+type tfRemoteBackend struct {
 	Organization    string
 	Workspace       string
 	RequiredVersion string
 	Hostname        string
+}
+
+type tfRc struct {
+	Credentials []credential `hcl:"credentials,block"`
 }
 
 type credential struct {
@@ -25,12 +29,8 @@ type credential struct {
 	Token string `hcl:"token"`
 }
 
-type terraformrc struct {
-	Credentials []credential `hcl:"credentials,block"`
-}
-
-func parseTfRemoteBackend(root string) (*remoteBackend, error) {
-	var rb *remoteBackend
+func parseTfRemoteBackend(root string) (*tfRemoteBackend, error) {
+	var rb *tfRemoteBackend
 	err := filepath.Walk(root,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -56,7 +56,7 @@ func parseTfRemoteBackend(root string) (*remoteBackend, error) {
 					for _, subBlock := range block.Body().Blocks() {
 						if subBlock.Type() == "backend" && subBlock.Labels()[0] == "remote" {
 							subBlockBody := subBlock.Body()
-							rb = &remoteBackend{
+							rb = &tfRemoteBackend{
 								Organization:    parseAttribute(subBlockBody.GetAttribute("organization")),
 								Hostname:        parseAttribute(subBlockBody.GetAttribute("hostname")),
 								Workspace:       parseAttribute(subBlockBody.Blocks()[0].Body().GetAttribute("name")),
@@ -86,7 +86,7 @@ func parseTerraformrc(path string) (string, error) {
 	if diags.HasErrors() {
 		return "", fmt.Errorf("Parse %s failed", path)
 	}
-	var tfrc terraformrc
+	var tfrc tfRc
 	diags = gohcl.DecodeBody(f.Body, nil, &tfrc)
 	if diags.HasErrors() {
 		return "", fmt.Errorf("Decode %s failed", path)
