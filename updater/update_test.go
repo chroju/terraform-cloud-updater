@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var releaseVersions = []*tfRelease{
+var releases = []*tfRelease{
 	{
 		Draft:           true,
 		SemanticVersion: []int{0, 13, 0},
@@ -75,12 +75,10 @@ func TestGetDesiredVersion(t *testing.T) {
 		},
 	}
 
-	updater := &Updater{
-		ReleaseVersions: releaseVersions,
-	}
+	updater := &Updater{}
 	for _, v := range cases {
 		updater.RequiredVersions = v.requiredVersions
-		result, err := updater.GetDesiredVersion()
+		result, err := updater.GetDesiredVersion(releases)
 		if err != nil {
 			t.Errorf("Failed: requiredVersions = %v / err = %s", v.requiredVersions, err)
 		} else if reflect.DeepEqual(result.SemanticVersion, &(v.expected)) {

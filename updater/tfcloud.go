@@ -1,4 +1,4 @@
-package tfcloud
+package updater
 
 import (
 	"context"

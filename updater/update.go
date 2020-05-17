@@ -13,10 +13,9 @@ const (
 
 type Updater struct {
 	Backend          *tfRemoteBackend
-	Tfc              *tfcloud.TfCloud
+	Tfc              *TfCloud
 	CurrentVersion   semanticVersion
 	RequiredVersions RequiredVersions
-	ReleaseVersions  []*tfRelease
 }
 
 func NewUpdater(root, token string) (*Updater, error) {
@@ -26,11 +25,6 @@ func NewUpdater(root, token string) (*Updater, error) {
 	}
 
 	tfc, err := initializeTfCloud(token)
-	if err != nil {
-		return nil, err
-	}
-
-	releaseVersions, err := getTfReleases()
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +44,6 @@ func NewUpdater(root, token string) (*Updater, error) {
 			Tfc:              tfc,
 			CurrentVersion:   currentVersion,
 			RequiredVersions: nil,
-			ReleaseVersions:  releaseVersions,
 		}, nil
 	}
 
@@ -62,12 +55,11 @@ func NewUpdater(root, token string) (*Updater, error) {
 		Tfc:              tfc,
 		CurrentVersion:   currentVersion,
 		RequiredVersions: rvs,
-		ReleaseVersions:  releaseVersions,
 	}, nil
 }
 
-func (u *Updater) GetDesiredVersion() (*tfRelease, error) {
-	for _, v := range u.ReleaseVersions {
+func (u *Updater) GetDesiredVersion(releases []*tfRelease) (*tfRelease, error) {
+	for _, v := range releases {
 		if v.Draft {
 			continue
 		}
@@ -78,7 +70,7 @@ func (u *Updater) GetDesiredVersion() (*tfRelease, error) {
 	return nil, fmt.Errorf("Something wrong")
 }
 
-func initializeTfCloud(token string) (*tfcloud.TfCloud, error) {
+func initializeTfCloud(token string) (*TfCloud, error) {
 	if token == "" {
 		token = os.Getenv("TFE_TOKEN")
 	}
@@ -90,7 +82,7 @@ func initializeTfCloud(token string) (*tfcloud.TfCloud, error) {
 		return nil, fmt.Errorf("Terraform cloud token is not found")
 	}
 
-	tfc, err := tfcloud.NewTfCloud(token)
+	tfc, err := NewTfCloud(token)
 	if err != nil {
 		return nil, err
 	}
