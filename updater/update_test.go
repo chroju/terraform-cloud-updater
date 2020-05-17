@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var releaseVersions = []*tfVersion{
+var releaseVersions = []*tfRelease{
 	{
 		Draft:           true,
 		SemanticVersion: []int{0, 13, 0},
@@ -31,7 +31,7 @@ var releaseVersions = []*tfVersion{
 func TestGetDesiredVersion(t *testing.T) {
 	cases := []struct {
 		requiredVersions []*RequiredVersion
-		expected         SemanticVersion
+		expected         semanticVersion
 	}{
 		{
 			requiredVersions: []*RequiredVersion{

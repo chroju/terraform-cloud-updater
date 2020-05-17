@@ -5,8 +5,8 @@ import (
 )
 
 var cases = []struct {
-	src SemanticVersion
-	dst SemanticVersion
+	src semanticVersion
+	dst semanticVersion
 }{
 	{
 		src: []int{0, 12, 0},

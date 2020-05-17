@@ -5,8 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/chroju/terraform-workspace-update/tfcloud"
 )
 
 const (
@@ -16,18 +14,9 @@ const (
 type Updater struct {
 	Backend          *tfRemoteBackend
 	Tfc              *tfcloud.TfCloud
-	CurrentVersion   SemanticVersion
-	RequiredVersions []*RequiredVersion
-	ReleaseVersions  []*tfVersion
-}
-
-type RequiredVersion struct {
-	Operator        string
-	SemanticVersion SemanticVersion
-}
-
-func (r *RequiredVersion) String() string {
-	return fmt.Sprintf("%s %v", r.Operator, r.SemanticVersion)
+	CurrentVersion   semanticVersion
+	RequiredVersions RequiredVersions
+	ReleaseVersions  []*tfRelease
 }
 
 func NewUpdater(root, token string) (*Updater, error) {
@@ -41,7 +30,7 @@ func NewUpdater(root, token string) (*Updater, error) {
 		return nil, err
 	}
 
-	releaseVersions, err := getTerraformVersions()
+	releaseVersions, err := getTfReleases()
 	if err != nil {
 		return nil, err
 	}
@@ -77,57 +66,16 @@ func NewUpdater(root, token string) (*Updater, error) {
 	}, nil
 }
 
-func (u *Updater) GetDesiredVersion() (*tfVersion, error) {
+func (u *Updater) GetDesiredVersion() (*tfRelease, error) {
 	for _, v := range u.ReleaseVersions {
 		if v.Draft {
 			continue
 		}
-		if checkVersionConsistency(v.SemanticVersion, u.RequiredVersions) {
+		if u.RequiredVersions.CheckVersionConsistency(v.SemanticVersion) {
 			return v, nil
 		}
 	}
 	return nil, fmt.Errorf("Something wrong")
-}
-
-func checkVersionConsistency(target SemanticVersion, requiredVersions []*RequiredVersion) bool {
-	for _, v := range requiredVersions {
-		required := v.SemanticVersion
-		switch v.Operator {
-		case "":
-			if !required.IsEquall(target) {
-				return false
-			}
-		case "=":
-			if !required.IsEquall(target) {
-				return false
-			}
-		case "!=":
-			if !required.IsNotEquall(target) {
-				return false
-			}
-		case ">":
-			if !required.IsLessThan(target) {
-				return false
-			}
-		case ">=":
-			if !required.IsLessThanOrEqual(target) {
-				return false
-			}
-		case "<":
-			if !required.IsGreaterThan(target) {
-				return false
-			}
-		case "<=":
-			if !required.IsGreaterThanOrEqual(target) {
-				return false
-			}
-		case "~>":
-			if !required.IsPessimisticConstraint(target) {
-				return false
-			}
-		}
-	}
-	return true
 }
 
 func initializeTfCloud(token string) (*tfcloud.TfCloud, error) {
