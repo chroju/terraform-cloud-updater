@@ -12,10 +12,18 @@ type TfCloud struct {
 	ctx context.Context
 }
 
+type tfRemoteBackend struct {
+	Organization    string
+	Workspace       string
+	RequiredVersion string
+	Hostname        string
+}
+
 // NewTfCloud creates a new TfCloud API client
-func NewTfCloud(token string) (*TfCloud, error) {
+func NewTfCloud(address, token string) (*TfCloud, error) {
 	config := &tfe.Config{
-		Token: token,
+		Address: address,
+		Token:   token,
 	}
 
 	client, err := tfe.NewClient(config)
@@ -24,12 +32,10 @@ func NewTfCloud(token string) (*TfCloud, error) {
 	}
 
 	ctx := context.Background()
-	tfcloud := &TfCloud{
+	return &TfCloud{
 		client,
 		ctx,
-	}
-
-	return tfcloud, nil
+	}, nil
 }
 
 // ReadWorkspace reads Terraform Cloud workspace

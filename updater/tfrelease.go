@@ -15,7 +15,7 @@ const (
 type tfRelease struct {
 	Draft           bool   `json:"draft"`
 	Tag             string `json:"tag_name"`
-	SemanticVersion semanticVersion
+	SemanticVersion SemanticVersion
 }
 
 func getTfReleases() ([]*tfRelease, error) {
@@ -37,7 +37,7 @@ func getTfReleases() ([]*tfRelease, error) {
 	for _, v := range tfReleases {
 		v.Tag = v.Tag[1:]
 		split := strings.Split(v.Tag, ".")
-		var sv semanticVersion
+		var sv SemanticVersion
 		sv = make([]int, len(split))
 		for i, v2 := range split {
 			sv[i], _ = strconv.Atoi(v2)

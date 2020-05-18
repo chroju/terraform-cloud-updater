@@ -31,7 +31,7 @@ var releases = []*tfRelease{
 func TestGetDesiredVersion(t *testing.T) {
 	cases := []struct {
 		requiredVersions []*RequiredVersion
-		expected         semanticVersion
+		expected         SemanticVersion
 	}{
 		{
 			requiredVersions: []*RequiredVersion{
@@ -73,15 +73,19 @@ func TestGetDesiredVersion(t *testing.T) {
 			},
 			expected: []int{0, 12, 25},
 		},
+		{
+			requiredVersions: nil,
+			expected:         []int{0, 13, 0},
+		},
 	}
 
-	updater := &Updater{}
+	w := &Workspace{}
 	for _, v := range cases {
-		updater.RequiredVersions = v.requiredVersions
-		result, err := updater.GetDesiredVersion(releases)
+		w.requiredVersions = v.requiredVersions
+		result, err := w.GetLatestVersion(releases)
 		if err != nil {
 			t.Errorf("Failed: requiredVersions = %v / err = %s", v.requiredVersions, err)
-		} else if reflect.DeepEqual(result.SemanticVersion, &(v.expected)) {
+		} else if reflect.DeepEqual(result, &(v.expected)) {
 			t.Errorf("Failed: requiredVersions = %v / want = %v / get = %v", v.requiredVersions, v.expected, result)
 		}
 	}

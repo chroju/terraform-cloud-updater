@@ -100,3 +100,22 @@ func parseAttribute(a *hclwrite.Attribute) string {
 	}
 	return string(a.Expr().BuildTokens(nil)[1].Bytes)
 }
+
+func initializeTfCloud(token string) (*TfCloud, error) {
+	if token == "" {
+		token = os.Getenv("TFE_TOKEN")
+	}
+	if token == "" {
+		home := os.Getenv("HOME")
+		token, _ = parseTerraformrc(home + "/.terraformrc")
+	}
+	if token == "" {
+		return nil, fmt.Errorf("Terraform cloud token is not found")
+	}
+
+	tfc, err := NewTfCloud(token)
+	if err != nil {
+		return nil, err
+	}
+	return tfc, nil
+}
