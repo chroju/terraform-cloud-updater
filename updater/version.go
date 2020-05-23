@@ -7,113 +7,131 @@ import (
 	"strings"
 )
 
-type SemanticVersion []int
+// SemanticVersion represents semantic version
+type SemanticVersion struct {
+	Versions []int
+}
 
 func (s *SemanticVersion) String() string {
-	var result string
-	for _, v := range *s {
-		result = strings.Join([]string{result, strconv.Itoa(v)}, ".")
+	result := make([]string, len(s.Versions))
+	for i, v := range s.Versions {
+		result[i] = strconv.Itoa(v)
 	}
-	return result
+	return strings.Join(result, ".")
 }
 
-func (s *SemanticVersion) IsEquall(target SemanticVersion) bool {
-	return reflect.DeepEqual(s, &target)
-}
-
-func (s *SemanticVersion) IsNotEquall(target SemanticVersion) bool {
-	return !reflect.DeepEqual(s, &target)
-}
-
-func (s *SemanticVersion) IsGreaterThan(target SemanticVersion) bool {
-	for i, v := range *s {
-		if v > target[i] {
-			return true
+func NewSemanticVersion(versionString string) (*SemanticVersion, error) {
+	split := strings.Split(versionString, ".")
+	sv := make([]int, len(split))
+	for i, v := range split {
+		converted, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, err
 		}
-		if v < target[i] {
-			return false
-		}
+		sv[i] = converted
 	}
-	return false
+	return &SemanticVersion{Versions: sv}, nil
 }
 
-func (s *SemanticVersion) IsGreaterThanOrEqual(target SemanticVersion) bool {
-	return !s.IsLessThan(target)
-}
-
-func (s *SemanticVersion) IsLessThan(target SemanticVersion) bool {
-	for i, v := range *s {
-		if v > target[i] {
-			return false
-		}
-		if v < target[i] {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *SemanticVersion) IsLessThanOrEqual(target SemanticVersion) bool {
-	return !s.IsGreaterThan(target)
-}
-
-func (s *SemanticVersion) IsPessimisticConstraint(target SemanticVersion) bool {
-	for i, v := range *s {
-		if v != target[i] {
-			return false
-		}
-		if i == 1 {
-			break
-		}
-	}
-	return true
-}
-
+// RequiredVersion represents Terraform required version
 type RequiredVersion struct {
-	Operator        string
-	SemanticVersion SemanticVersion
+	Operator        Operator
+	SemanticVersion *SemanticVersion
 }
+
+// Operator is required version operator
+type Operator string
+
+const (
+	blank                 Operator = ""
+	equal                 Operator = "="
+	notEqual              Operator = "!="
+	greaterThan           Operator = ">"
+	greaterThanOrEqual    Operator = ">="
+	lessThan              Operator = "<"
+	lessThanEqual         Operator = "<="
+	pessimisticConstraint Operator = "~>"
+	operators             string   = "=!<>~"
+)
 
 func (r *RequiredVersion) String() string {
 	return fmt.Sprintf("%s %v", r.Operator, r.SemanticVersion)
 }
 
+// RequiredVersions represents Terraform required versions
 type RequiredVersions []*RequiredVersion
 
-func (r *RequiredVersions) CheckVersionConsistency(s SemanticVersion) bool {
+// NewRequiredVersions returns new RequiredVersions from given constraints
+func NewRequiredVersions(versionString string) (RequiredVersions, error) {
+	if strings.Contains(versionString, ",") {
+		split := strings.Split(versionString, ",")
+		rvs := make([]*RequiredVersion, len(split))
+		for i, v := range split {
+			rv, err := NewRequiredVersions(v)
+			if err != nil {
+				return nil, err
+			}
+			rvs[i] = rv[0]
+		}
+		return rvs, nil
+	}
+
+	rv := &RequiredVersion{}
+	if strings.ContainsAny(versionString, operators) {
+		index := strings.LastIndexAny(versionString, operators)
+		rv.Operator = Operator(strings.TrimSpace(versionString[:index+1]))
+		versionString = strings.TrimSpace(versionString[index+1:])
+	} else {
+		rv.Operator = blank
+	}
+
+	sv, err := NewSemanticVersion(versionString)
+	if err != nil {
+		return nil, err
+	}
+	rv.SemanticVersion = sv
+
+	return []*RequiredVersion{rv}, nil
+}
+
+func (r *RequiredVersions) String() string {
+	result := make([]string, len(*r))
+	for i, v := range *r {
+		result[i] = v.String()
+	}
+	return strings.Join(result, ", ")
+}
+
+// CheckVersionConsistency checks given semantic version is consistent with requreid versions
+func (r *RequiredVersions) CheckVersionConsistency(s *SemanticVersion) bool {
 	for _, v := range *r {
-		requiredVersion := v.SemanticVersion
 		switch v.Operator {
-		case "":
-			if !s.IsEquall(requiredVersion) {
+		case blank, equal:
+			if !v.IsEquall(s) {
 				return false
 			}
-		case "=":
-			if !s.IsEquall(requiredVersion) {
+		case notEqual:
+			if !v.IsNotEquall(s) {
 				return false
 			}
-		case "!=":
-			if !s.IsNotEquall(requiredVersion) {
+		case greaterThan:
+			if !v.IsGreaterThan(s) {
 				return false
 			}
-		case ">":
-			if !s.IsGreaterThan(requiredVersion) {
+		case greaterThanOrEqual:
+			if !v.IsGreaterThanOrEqual(s) {
 				return false
 			}
-		case ">=":
-			if !s.IsGreaterThanOrEqual(requiredVersion) {
+		case lessThan:
+			if !v.IsLessThan(s) {
 				return false
 			}
-		case "<":
-			if !s.IsLessThan(requiredVersion) {
+		case lessThanEqual:
+			if !v.IsLessThanOrEqual(s) {
 				return false
 			}
-		case "<=":
-			if !s.IsLessThanOrEqual(requiredVersion) {
-				return false
-			}
-		case "~>":
-			if !s.IsPessimisticConstraint(requiredVersion) {
+		case pessimisticConstraint:
+			if !v.IsPessimisticConstraint(s) {
 				return false
 			}
 		}
@@ -121,33 +139,67 @@ func (r *RequiredVersions) CheckVersionConsistency(s SemanticVersion) bool {
 	return true
 }
 
-func NewRequiredVersions(versionString string) RequiredVersions {
-	if strings.Contains(versionString, ",") {
-		split := strings.Split(versionString, ",")
-		rvs := make([]*RequiredVersion, len(split))
-		for i, v := range split {
-			rvs[i] = NewRequiredVersions(v)[0]
-		}
-		return rvs
-	}
+func (r *RequiredVersion) IsEquall(target *SemanticVersion) bool {
+	return reflect.DeepEqual(r.SemanticVersion, target)
+}
 
-	var rv *RequiredVersion
-	split := strings.Split(versionString, ".")
-	var sv []int
-	if len(split) != 3 && !strings.Contains(split[0], "~>") {
-		sv = []int{0, 0, 0}
+func (r *RequiredVersion) IsNotEquall(target *SemanticVersion) bool {
+	return !reflect.DeepEqual(r.SemanticVersion, target)
+}
+
+func (r *RequiredVersion) IsGreaterThan(target *SemanticVersion) bool {
+	for i, v := range r.SemanticVersion.Versions {
+		if target.Versions[i] > v {
+			return true
+		}
+		if target.Versions[i] < v {
+			return false
+		}
+	}
+	if len(r.SemanticVersion.Versions) == 2 {
+		return true
+	}
+	return false
+}
+
+func (r *RequiredVersion) IsGreaterThanOrEqual(target *SemanticVersion) bool {
+	return !r.IsLessThan(target)
+}
+
+func (r *RequiredVersion) IsLessThan(target *SemanticVersion) bool {
+	for i, v := range r.SemanticVersion.Versions {
+		if target.Versions[i] < v {
+			return true
+		}
+		if target.Versions[i] > v {
+			return false
+		}
+	}
+	return false
+}
+
+func (r *RequiredVersion) IsLessThanOrEqual(target *SemanticVersion) bool {
+	return !r.IsGreaterThan(target)
+}
+
+func (r *RequiredVersion) IsPessimisticConstraint(target *SemanticVersion) bool {
+	// `~> 0.9` is equivalent to `>= 0.9` and `< 1.0`
+	// First, check `>=`
+	if r.IsLessThan(target) {
+		return false
+	}
+	// Second, check `<`
+	nextVersion := make([]int, 2)
+	if r.SemanticVersion.Versions[1] == 9 {
+		nextVersion[1] = 0
 	} else {
-		sv = make([]int, len(split))
+		nextVersion[1] = r.SemanticVersion.Versions[1] + 1
 	}
-	for i, v := range split {
-		if i == 0 && strings.ContainsAny(v, operator) {
-			index := strings.LastIndex("", operator)
-			rv.Operator = v[:index]
-			sv[0], _ = strconv.Atoi(strings.TrimSpace(v[index+1:]))
-		}
-		sv[i], _ = strconv.Atoi(v)
-	}
-	rv.SemanticVersion = sv
+	r.SemanticVersion.Versions = nextVersion
 
-	return []*RequiredVersion{rv}
+	if r.IsGreaterThanOrEqual(target) {
+		return false
+	}
+
+	return true
 }

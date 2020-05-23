@@ -2,28 +2,29 @@ package updater
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	tfe "github.com/hashicorp/go-tfe"
 )
 
-// TfCloud represents Terraform Cloud
-type TfCloud struct {
+// TfCloud represents Terraform Cloud API wrapper
+type TfCloud interface {
+	ReadWorkspaceVersion(org, workspace string) (*SemanticVersion, error)
+	UpdateWorkspaceVersion(org, workspace string, sv *SemanticVersion) error
+	// *tfe.Client
+	// ctx context.Context
+}
+
+type tfcloudImpl struct {
 	*tfe.Client
 	ctx context.Context
 }
 
-type tfRemoteBackend struct {
-	Organization    string
-	Workspace       string
-	RequiredVersion string
-	Hostname        string
-}
-
-// NewTfCloud creates a new TfCloud API client
-func NewTfCloud(address, token string) (*TfCloud, error) {
+// NewTfCloud creates a new TfCloud interface
+func NewTfCloud(address, token string) (TfCloud, error) {
 	config := &tfe.Config{
-		Address: address,
-		Token:   token,
+		Token: token,
 	}
 
 	client, err := tfe.NewClient(config)
@@ -32,14 +33,13 @@ func NewTfCloud(address, token string) (*TfCloud, error) {
 	}
 
 	ctx := context.Background()
-	return &TfCloud{
+	return &tfcloudImpl{
 		client,
 		ctx,
 	}, nil
 }
 
-// ReadWorkspace reads Terraform Cloud workspace
-func (t *TfCloud) ReadWorkspace(organization, workspace string) (*tfe.Workspace, error) {
+func (t *tfcloudImpl) readWorkspace(organization, workspace string) (*tfe.Workspace, error) {
 	ws, err := t.Workspaces.Read(t.ctx, organization, workspace)
 	if err != nil {
 		return nil, err
@@ -48,31 +48,36 @@ func (t *TfCloud) ReadWorkspace(organization, workspace string) (*tfe.Workspace,
 }
 
 // ReadWorkspaceVersion reads Terraform Cloud workspace terraform version
-func (t *TfCloud) ReadWorkspaceVersion(organization, workspace string) (string, error) {
-	ws, err := t.Workspaces.Read(t.ctx, organization, workspace)
+func (t *tfcloudImpl) ReadWorkspaceVersion(org, workspace string) (*SemanticVersion, error) {
+	ws, err := t.Workspaces.Read(t.ctx, org, workspace)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return ws.TerraformVersion, nil
+
+	sv := make([]int, 3)
+	for i, v := range strings.Split(ws.TerraformVersion, ".") {
+		sv[i], _ = strconv.Atoi(v)
+	}
+
+	return &SemanticVersion{Versions: sv}, nil
 }
 
 // UpdateWorkspaceVersion updates Terraform Cloud workspace terraform version
-func (t *TfCloud) UpdateWorkspaceVersion(organization, workspace, version string) (*tfe.Workspace, error) {
-	oldWs, err := t.ReadWorkspace(organization, workspace)
+func (t *tfcloudImpl) UpdateWorkspaceVersion(org, workspace string, sv *SemanticVersion) error {
+	oldWs, err := t.readWorkspace(org, workspace)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if oldWs.TerraformVersion == version {
-		return oldWs, nil
+	if oldWs.TerraformVersion == sv.String() {
+		return nil
 	}
 
 	options := tfe.WorkspaceUpdateOptions{
-		TerraformVersion: &version,
+		TerraformVersion: tfe.String(sv.String()),
 	}
-	newWs, err := t.Client.Workspaces.Update(t.ctx, organization, workspace, options)
-	if err != nil {
-		return nil, err
+	if _, err = t.Client.Workspaces.Update(t.ctx, org, workspace, options); err != nil {
+		return err
 	}
-	return newWs, nil
+	return nil
 }
