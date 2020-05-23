@@ -20,6 +20,7 @@ func (s *SemanticVersion) String() string {
 	return strings.Join(result, ".")
 }
 
+// NewSemanticVersion creates a new SemanticVersion from the string represents semantic version
 func NewSemanticVersion(versionString string) (*SemanticVersion, error) {
 	split := strings.Split(versionString, ".")
 	sv := make([]int, len(split))

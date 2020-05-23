@@ -12,8 +12,6 @@ import (
 type TfCloud interface {
 	ReadWorkspaceVersion(org, workspace string) (*SemanticVersion, error)
 	UpdateWorkspaceVersion(org, workspace string, sv *SemanticVersion) error
-	// *tfe.Client
-	// ctx context.Context
 }
 
 type tfcloudImpl struct {
