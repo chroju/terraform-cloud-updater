@@ -14,11 +14,18 @@ type CheckCommand struct {
 }
 
 func (c *CheckCommand) Run(args []string) int {
-	currentDir, _ := os.Getwd()
-	token := flag.String("token", "", "Terraform Cloud token")
-	root := flag.String("root-path", currentDir, "Terraform config root path (default: current directory)")
+	var root, token string
 
-	ws, err := InitCLI(*root, *token)
+	currentDir, _ := os.Getwd()
+	f := flag.NewFlagSet("check", flag.ExitOnError)
+	f.StringVar(&token, "token", "", "Terraform Cloud token")
+	f.StringVar(&root, "root-path", currentDir, "Terraform config root path (default: current directory)")
+	if err := f.Parse(args); err != nil {
+		c.UI.Error(err.Error())
+		return 1
+	}
+
+	ws, err := InitCLI(root, token)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
