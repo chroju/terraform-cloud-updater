@@ -37,7 +37,7 @@ function main {
     if [[ "${commentPR}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
         CommentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
         echo "info: commenting on the pull request"
-        output="Terraform Cloud Workspace [[${subcommand}]] has done\n${output}"
+        output="Terraform Cloud Workspace [[${subcommand}]] has detected new version\n\n${output}"
         echo "${output}" | curl -s -S -H "Authorization: token ${GITHUB_TOKEN}" --header "Content-Type: application/json" --data @- "${CommentsURL}" > /dev/null
     fi
 }
