@@ -47,7 +47,7 @@ func (t *tfReleasesImpl) List() ([]*TfRelease, error) {
 		return nil, err
 	}
 	for _, v := range tfReleases {
-		sv, err := NewSemanticVersion(v.Tag[1:])
+		sv, err := NewSemanticVersion(v.Tag)
 		if err != nil {
 			return nil, err
 		}

@@ -10,28 +10,42 @@ import (
 // SemanticVersion represents semantic version
 type SemanticVersion struct {
 	Versions []int
+	Status   string
 }
 
 func (s *SemanticVersion) String() string {
-	result := make([]string, len(s.Versions))
+	stringsVar := make([]string, len(s.Versions))
 	for i, v := range s.Versions {
-		result[i] = strconv.Itoa(v)
+		stringsVar[i] = strconv.Itoa(v)
 	}
-	return strings.Join(result, ".")
+
+	var status string
+	if s.Status != "" {
+		status = "-" + s.Status
+	}
+
+	return strings.Join(stringsVar, ".") + status
 }
 
 // NewSemanticVersion creates a new SemanticVersion from the string represents semantic version
 func NewSemanticVersion(versionString string) (*SemanticVersion, error) {
-	split := strings.Split(versionString, ".")
+	var status string
+	versionAndStatus := strings.Split(versionString, "-")
+	if len(versionAndStatus) > 1 {
+		status = versionAndStatus[1]
+	}
+
+	split := strings.Split(versionAndStatus[0], ".")
 	sv := make([]int, len(split))
 	for i, v := range split {
-		converted, err := strconv.Atoi(v)
+		converted, err := strconv.Atoi(strings.TrimLeft(v, "v"))
 		if err != nil {
 			return nil, err
 		}
 		sv[i] = converted
 	}
-	return &SemanticVersion{Versions: sv}, nil
+
+	return &SemanticVersion{Versions: sv, Status: status}, nil
 }
 
 // RequiredVersion represents Terraform required version
