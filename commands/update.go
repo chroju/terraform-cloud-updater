@@ -55,7 +55,7 @@ func (c *UpdateCommand) Run(args []string) int {
 	}
 
 	if currentVer.String() == semver.String() {
-		c.UI.Info("No updates available.")
+		c.UI.Warn("No updates available.")
 		return 0
 	}
 
