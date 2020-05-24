@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-type CLIConfig struct {
+type cliConfig struct {
 	Token           string
 	Hostname        string
 	Organization    string
@@ -34,7 +34,7 @@ type credential struct {
 
 // InitCLI initialize CLI config and creates a new workspace
 func InitCLI(root, token string) (*updater.Workspace, error) {
-	config, err := ParseTfFiles(root)
+	config, err := parseTfFiles(root)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +56,7 @@ func InitCLI(root, token string) (*updater.Workspace, error) {
 	return ws, nil
 }
 
-// ParseTfFiles parses local Terraform files and creates a new CLIConfig
-func ParseTfFiles(root string) (*CLIConfig, error) {
+func parseTfFiles(root string) (*cliConfig, error) {
 	config, err := parseTfRemoteBackend(root)
 	if err != nil {
 		return nil, err
@@ -76,8 +75,8 @@ func ParseTfFiles(root string) (*CLIConfig, error) {
 	return config, nil
 }
 
-func parseTfRemoteBackend(root string) (*CLIConfig, error) {
-	var config *CLIConfig
+func parseTfRemoteBackend(root string) (*cliConfig, error) {
+	var config *cliConfig
 	err := filepath.Walk(root,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
