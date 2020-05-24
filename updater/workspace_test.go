@@ -1,92 +1,127 @@
 package updater
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
 
-var releases = []*tfRelease{
+var releases = []*TfRelease{
 	{
 		Draft:           true,
-		SemanticVersion: []int{0, 13, 0},
+		Tag:             "v0.13.0",
+		SemanticVersion: &SemanticVersion{Versions: []int{0, 13, 0}},
 	},
 	{
 		Draft:           false,
-		SemanticVersion: []int{0, 12, 26},
+		Tag:             "v0.12.26",
+		SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 26}},
 	},
 	{
 		Draft:           false,
-		SemanticVersion: []int{0, 12, 25},
+		Tag:             "v0.12.25",
+		SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 25}},
 	},
 	{
 		Draft:           false,
-		SemanticVersion: []int{0, 12, 24},
+		Tag:             "v0.12.24",
+		SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 24}},
 	},
 	{
 		Draft:           false,
-		SemanticVersion: []int{0, 12, 23},
+		Tag:             "v0.12.23",
+		SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 23}},
 	},
 }
 
-func TestGetDesiredVersion(t *testing.T) {
+type TfReleasesMock struct{}
+
+func (t *TfReleasesMock) List() ([]*TfRelease, error) {
+	return releases, nil
+}
+
+func TestGetLatestVersion(t *testing.T) {
 	cases := []struct {
-		requiredVersions []*RequiredVersion
-		expected         SemanticVersion
+		requiredVersions RequiredVersions
+		expected         *SemanticVersion
+	}{
+		{
+			requiredVersions: []*RequiredVersion{
+				{
+					Operator:        "~>",
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12}},
+				},
+			},
+			expected: &SemanticVersion{Versions: []int{0, 12, 26}},
+		},
+	}
+
+	w := &Workspace{
+		tfRelease: &TfReleasesMock{},
+	}
+	for _, v := range cases {
+		w.requiredVersions = v.requiredVersions
+		result, err := w.GetLatestVersion()
+		if err != nil {
+			t.Errorf("Failed: requiredVersions = %v / err = %s", v.requiredVersions, err)
+		} else if reflect.DeepEqual(result, &(v.expected)) {
+			t.Errorf("Failed: requiredVersions = %v / want = %v / get = %v", v.requiredVersions, v.expected, result)
+		}
+	}
+}
+
+func TestUpdateVersion(t *testing.T) {
+	cases := []struct {
+		requiredVersions RequiredVersions
+		updateVersion    *SemanticVersion
+		expectError      bool
 	}{
 		{
 			requiredVersions: []*RequiredVersion{
 				{
 					Operator:        ">",
-					SemanticVersion: []int{0, 12, 24},
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 24}},
 				},
 			},
-			expected: []int{0, 12, 26},
-		},
-		{
-			requiredVersions: []*RequiredVersion{
-				{
-					Operator:        "~>",
-					SemanticVersion: []int{0, 12},
-				},
-			},
-			expected: []int{0, 12, 26},
-		},
-		{
-			requiredVersions: []*RequiredVersion{
-				{
-					Operator:        "~>",
-					SemanticVersion: []int{0, 12, 0},
-				},
-			},
-			expected: []int{0, 12, 26},
+			updateVersion: &SemanticVersion{Versions: []int{0, 12, 25}},
+			expectError:   false,
 		},
 		{
 			requiredVersions: []*RequiredVersion{
 				{
 					Operator:        "<",
-					SemanticVersion: []int{0, 12, 26},
-				},
-				{
-					Operator:        ">=",
-					SemanticVersion: []int{0, 12, 22},
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 24}},
 				},
 			},
-			expected: []int{0, 12, 25},
-		},
-		{
-			requiredVersions: nil,
-			expected:         []int{0, 13, 0},
+			updateVersion: &SemanticVersion{Versions: []int{0, 12, 25}},
+			expectError:   true,
 		},
 	}
 
-	w := &Workspace{}
+	token := os.Getenv("TFE_TOKEN")
+	if token == "" {
+		t.Error("Please set your Terraform Cloud token to env var TFE_TOKEN")
+	}
+	org := os.Getenv("TFE_ORG")
+	if org == "" {
+		t.Error("Please set your Terraform Cloud organization to env var TFE_ORG")
+	}
+	workspace := os.Getenv("TFE_WORKSPACE")
+	if workspace == "" {
+		workspace = "sample"
+	}
+
+	client, _ := NewTfCloud("app.terraform.io", token)
+	config := &Config{
+		Organization: org,
+		Workspace:    workspace,
+	}
+	w, _ := NewWorkspace(client, config)
 	for _, v := range cases {
 		w.requiredVersions = v.requiredVersions
-		result, err := w.GetLatestVersion(releases)
-		if err != nil {
-			t.Errorf("Failed: requiredVersions = %v / err = %s", v.requiredVersions, err)
-		} else if reflect.DeepEqual(result, &(v.expected)) {
-			t.Errorf("Failed: requiredVersions = %v / want = %v / get = %v", v.requiredVersions, v.expected, result)
+		err := w.UpdateVersion(v.updateVersion)
+		if (err != nil) != v.expectError {
+			t.Errorf("Failed: requiredVersions = %v / updateVersion = %v / want = %v", v.requiredVersions, v.updateVersion, v.expectError)
 		}
 	}
 }
