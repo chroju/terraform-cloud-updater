@@ -81,3 +81,16 @@ func (w *Workspace) UpdateVersion(s *SemanticVersion) error {
 	}
 	return nil
 }
+
+// UpdateLatestVersion update terraform cloud workspace terraform to the latest version
+func (w *Workspace) UpdateLatestVersion() (*SemanticVersion, error) {
+	newVersion, err := w.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = w.UpdateVersion(newVersion); err != nil {
+		return nil, err
+	}
+	return newVersion, nil
+}
