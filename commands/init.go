@@ -102,7 +102,7 @@ func parseTfRemoteBackend(root string) (*cliConfig, error) {
 					for _, subBlock := range block.Body().Blocks() {
 						if subBlock.Type() == "backend" && subBlock.Labels()[0] == "remote" {
 							subBlockBody := subBlock.Body()
-							config = &CLIConfig{
+							config = &cliConfig{
 								Organization:    parseAttribute(subBlockBody.GetAttribute("organization")),
 								Hostname:        parseAttribute(subBlockBody.GetAttribute("hostname")),
 								Workspace:       parseAttribute(subBlockBody.Blocks()[0].Body().GetAttribute("name")),
