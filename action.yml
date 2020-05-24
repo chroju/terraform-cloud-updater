@@ -1,0 +1,18 @@
+name: "Terraform Cloud Workspace Auto Update"
+description: "Update Terraform Cloud workspace terraform version based on remote config"
+inputs:
+  force_update:
+    description: "Force to update the latest version"
+    default: false
+  tfe_token:
+    description: "Terraform Cloud token"
+    required: true
+  comment_pr:
+    description: "If Whether or not to comment on GitHub pull requests"
+    default: false
+outputs:
+  result:
+    description: "Check or update result message"
+runs:
+  using: "docker"
+  image: "./Dockerfile"
