@@ -26,9 +26,9 @@ func main() {
 		"check": func() (cli.Command, error) {
 			return &commands.CheckCommand{UI: &cli.ColoredUi{Ui: ui, WarnColor: cli.UiColorYellow, ErrorColor: cli.UiColorRed}}, nil
 		},
-		// "update": func() (cli.Command, error) {
-		// 	return &commands.UpdateCommand{UI: &cli.ColoredUi{Ui: ui, ErrorColor: cli.UiColorRed}}, nil
-		// },
+		"update": func() (cli.Command, error) {
+			return &commands.UpdateCommand{UI: &cli.ColoredUi{Ui: ui, ErrorColor: cli.UiColorRed}}, nil
+		},
 	}
 
 	exitStatus, err := c.Run()

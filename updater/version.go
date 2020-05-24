@@ -210,9 +210,9 @@ func (r *RequiredVersion) IsPessimisticConstraint(target *SemanticVersion) bool 
 	} else {
 		nextVersion[1] = r.SemanticVersion.Versions[1] + 1
 	}
-	r.SemanticVersion.Versions = nextVersion
+	nextRv := &RequiredVersion{SemanticVersion: &SemanticVersion{Versions: nextVersion}}
 
-	if r.IsGreaterThanOrEqual(target) {
+	if nextRv.IsGreaterThanOrEqual(target) {
 		return false
 	}
 

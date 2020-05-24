@@ -53,7 +53,25 @@ func TestGetLatestVersion(t *testing.T) {
 					SemanticVersion: &SemanticVersion{Versions: []int{0, 12}},
 				},
 			},
-			expected: &SemanticVersion{Versions: []int{0, 12, 26}},
+			expected: &SemanticVersion{Versions: []int{0, 12, 25}},
+		},
+		{
+			requiredVersions: []*RequiredVersion{
+				{
+					Operator:        "~>",
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 2}},
+				},
+			},
+			expected: &SemanticVersion{Versions: []int{0, 12, 25}},
+		},
+		{
+			requiredVersions: []*RequiredVersion{
+				{
+					Operator:        "~>",
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 0}},
+				},
+			},
+			expected: &SemanticVersion{Versions: []int{0, 12, 25}},
 		},
 	}
 
