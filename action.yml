@@ -1,5 +1,8 @@
 name: "Terraform Cloud Workspace Auto Update"
 description: "Update Terraform Cloud workspace terraform version based on remote config"
+branding:
+  icon: "chevrons-up"
+  color: "purple"
 inputs:
   tfe_token:
     description: "Terraform Cloud token"
