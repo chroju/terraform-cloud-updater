@@ -4,6 +4,8 @@ function parseInputs {
     subcommand="check"
     if [[ "${INPUT_FORCE_UPDATE}" == "true" ]]; then
         subcommand="update latest"
+    elif [[ -n "${INPUT_SPECIFIC_VERSION}" ]]; then
+        subcommand="update ${INPUT_SPECIFIC_VERSION}"
     fi
 
     tfetoken=""
@@ -42,8 +44,8 @@ function main {
     if [[ "${commentPR}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
         CommentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
         echo "info: commenting on the pull request"
-        output="Terraform Cloud Workspace [[${subcommand}]] has detected new version\n\n${output}"
-        echo "${output}" | curl -s -S -H "Authorization: token ${GITHUB_TOKEN}" --header "Content-Type: application/json" --data @- "${CommentsURL}" > /dev/null
+        output="{\"body\": \"## Terraform Cloud Workspace new version detected\n* dir: ${workdir}\n* ${output}\"}"
+        echo "${output}"  | curl -XPOST -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" --data @- "${CommentsURL}" > /dev/null
     fi
 }
 

@@ -16,9 +16,11 @@ inputs:
   comment_pr:
     description: "If Whether or not to comment on GitHub pull requests"
     default: false
+  specific_version:
+    description: "Update to the specific version"
 outputs:
   result:
-    description: "Check or update result message"
+    description: "Check or update result message (empty if new version is not released)"
 runs:
   using: "docker"
   image: "./Dockerfile"
