@@ -11,6 +11,11 @@ function parseInputs {
         tfetoken=${INPUT_TFE_TOKEN}
     fi
 
+    workdir="./"
+    if [[ -n "${INPUT_WORKDIR}" ]]; then
+        workdir=${INPUT_WORKDIR}
+    fi
+
     commentPR=""
     if [[ "${INPUT_COMMENT_PR}" == "true" ]]; then
         commentPR="true"
@@ -19,7 +24,7 @@ function parseInputs {
 
 function main {
     parseInputs
-    output=$(go run main.go ${subcommand} --token ${tfetoken}) 2> /dev/null
+    output=$(go run main.go ${subcommand} --token ${tfetoken} --root-path ${workdir}) 2> /dev/null
     exitCode=${?}
 
     if [ ${exitCode} -ne 0 ]; then
