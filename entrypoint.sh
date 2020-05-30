@@ -26,7 +26,7 @@ function parseInputs {
 
 function main {
     parseInputs
-    output=$(go run main.go ${subcommand} --token ${tfetoken} --root-path ${workdir}) 2> /dev/null
+    output=$(go run main.go ${subcommand} --token ${tfetoken} --root-path ${workdir} 2> /dev/null)
     exitCode=${?}
 
     if [ ${exitCode} -ne 0 ]; then
@@ -39,13 +39,14 @@ function main {
         exit 0
     fi
 
+    echo "info: ${output}"
     echo "::set-output name=result::${output}"
 
     if [[ "${commentPR}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
         CommentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
         echo "info: commenting on the pull request"
-        output="{\"body\": \"## Terraform Cloud Workspace new version detected\n* dir: ${workdir}\n* ${output}\"}"
-        echo "${output}"  | curl -XPOST -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" --data @- "${CommentsURL}" > /dev/null
+        output="{\"body\": \"## Terraform Cloud Workspace new version detected\n* dir: `${workdir}`\n* ${output}\"}"
+        echo "${output}"  | curl -XPOST -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" --data @- "${CommentsURL}"
     fi
 }
 

@@ -47,7 +47,7 @@ func (c *CheckCommand) Run(args []string) int {
 		c.UI.Warn("New version is available.")
 		c.UI.Info(fmt.Sprintf("%s -> %s", currentVer.String(), latestVer.String()))
 	} else {
-		c.UI.Info("No updates available.")
+		c.UI.Warn("No updates available.")
 	}
 
 	return 0
