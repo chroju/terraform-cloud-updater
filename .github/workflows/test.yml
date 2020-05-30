@@ -6,6 +6,7 @@ on:
 
 env:
   TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   test_not_update:
@@ -18,21 +19,6 @@ jobs:
         with:
           workdir: ./test
           tfe_token: ${{ env.TFE_TOKEN }}
-          comment_pr: true
-      - name: result
-        run: echo "${{ steps.check.outputs.result }}"
-        if: "${{ steps.check.outputs.result != '' }}"
-  test_update:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: check version
-        id: check
-        uses: chroju/terraform-cloud-updater@alpha
-        with:
-          workdir: ./test
-          tfe_token: ${{ env.TFE_TOKEN }}
-          force_update: true
           comment_pr: true
       - name: result
         run: echo "${{ steps.check.outputs.result }}"
