@@ -1,11 +1,11 @@
 on:
   push:
+  pull_request:
     branches:
       - master
 
-enc:
+env:
   TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
-
 
 jobs:
   test_not_update:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: check version
-      uses: chroju/terraform-cloud-updater@alpha
+        uses: chroju/terraform-cloud-updater@alpha
         with:
           workdir: ./test
           tfe_token: ${{ env.TFE_TOKEN }}
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: check version
-      uses: chroju/terraform-cloud-updater@alpha
+        uses: chroju/terraform-cloud-updater@alpha
         with:
           workdir: ./test
           tfe_token: ${{ env.TFE_TOKEN }}
