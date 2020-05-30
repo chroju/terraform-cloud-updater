@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - master
+
+enc:
+  TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
+
+
+jobs:
+  test_not_update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: check version
+      uses: chroju/terraform-cloud-updater@alpha
+        with:
+          workdir: ./test
+          tfe_token: ${{ env.TFE_TOKEN }}
+          comment_pr: true
+  test_update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: check version
+      uses: chroju/terraform-cloud-updater@alpha
+        with:
+          workdir: ./test
+          tfe_token: ${{ env.TFE_TOKEN }}
+          force_update: true
+          comment_pr: true
