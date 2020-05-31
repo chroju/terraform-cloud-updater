@@ -65,6 +65,7 @@ func (c *UpdateCommand) Run(args []string) int {
 	}
 
 	c.UI.Info(fmt.Sprintf("Updated: %s -> %s", currentVer, semver))
+	c.UI.Info(fmt.Sprintf("\nLink to: %s", ws.GetSettingsLink()))
 	return 0
 }
 

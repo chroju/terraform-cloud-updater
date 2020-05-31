@@ -20,12 +20,19 @@ type Config struct {
 	Organization    string
 	Workspace       string
 	RequiredVersion string
+	Hostname        string
 }
 
 // NewWorkspace creates new workspace
 func NewWorkspace(tfcloud TfCloud, config *Config) (*Workspace, error) {
+	hostname := "app.terraform.io"
+	if config.Hostname != "" {
+		hostname = config.Hostname
+	}
+
 	ws := &Workspace{
 		client:           tfcloud,
+		hostname:         hostname,
 		organization:     config.Organization,
 		workspace:        config.Workspace,
 		requiredVersions: nil,
@@ -46,6 +53,11 @@ func NewWorkspace(tfcloud TfCloud, config *Config) (*Workspace, error) {
 // GetRequiredVersions get required versions
 func (w *Workspace) GetRequiredVersions() *RequiredVersions {
 	return &w.requiredVersions
+}
+
+// GetSettingsLink get workspace settings link
+func (w *Workspace) GetSettingsLink() string {
+	return fmt.Sprintf("https://%s/app/%s/workspaces/%s/settings/general", w.hostname, w.organization, w.workspace)
 }
 
 // GetCurrentVersion get terraform cloud workspace current terraform veresion
