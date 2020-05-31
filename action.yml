@@ -5,9 +5,6 @@ branding:
   icon: "chevrons-up"
   color: "purple"
 inputs:
-  tfe_token:
-    description: "Terraform Cloud API token"
-    required: true
   working_dir:
     description: "Terraform working directory"
     default: "./"
