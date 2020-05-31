@@ -30,11 +30,13 @@ function main {
     fi
 
     if [ -z "${output}" ]; then
+        echo "::set-output name=is_available_update::false"
         echo "info: no updates are available"
         exit 0
     fi
 
-    echo "::set-output name=result::${output}"
+    echo "::set-output name=output::${output}"
+    echo "::set-output name=is_available_update::true"
 
     workspaceLink=$(echo "${output}" | tail -n 1)
     output=$(echo "${output}" | head -n 1)
@@ -45,6 +47,9 @@ function main {
         echo "info: commenting on the pull request"
         output="{\"body\": \"#### Terraform Cloud Workspace new version detected\n\`\`\`\n${output}\n\`\`\`\n\n*working directory: \`${workdir}\`, ${workspaceLink}*\"}"
         echo "${output}"  | curl -XPOST -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" --data @- "${CommentsURL}"
+        if [ ${?} -ne 0 ]; then
+            echo "error: failed to post a comment to the pull request"
+        fi
     fi
 }
 

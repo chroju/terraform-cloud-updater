@@ -1,23 +1,26 @@
 name: "Terraform Cloud Workspace Auto Update"
-description: "Update Terraform Cloud workspace terraform version based on remote config"
+description: "Updates Terraform Cloud workspace terraform version based on the remote config file"
+author: "chroju <chor.chroju@gmail.com"
 branding:
   icon: "chevrons-up"
   color: "purple"
 inputs:
   working_dir:
-    description: "Terraform work directory"
+    description: "Terraform working directory"
     default: "./"
   force_update:
-    description: "Force to update the latest version"
+    description: "Force to update the latest version compatible with required versions"
     default: false
   comment_pr:
-    description: "If Whether or not to comment on GitHub pull requests"
+    description: "Whether or not to post a comment on GitHub pull requests"
     default: false
   specific_version:
-    description: "Update to the specific version"
+    description: "The specific terraform version update to"
 outputs:
-  result:
-    description: "Check or update result message (empty if new version is not released)"
+  is_available_update:
+    description: "Wherther or not available update ('true' or 'false')"
+  output:
+    description: "result message (empty if new version is not released)"
 runs:
   using: "docker"
   image: "./Dockerfile"
