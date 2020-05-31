@@ -43,6 +43,11 @@ func NewWorkspace(tfcloud TfCloud, config *Config) (*Workspace, error) {
 	return ws, nil
 }
 
+// GetRequiredVersions get required versions
+func (w *Workspace) GetRequiredVersions() *RequiredVersions {
+	return &w.requiredVersions
+}
+
 // GetCurrentVersion get terraform cloud workspace current terraform veresion
 func (w *Workspace) GetCurrentVersion() (*SemanticVersion, error) {
 	cv, err := w.client.ReadWorkspaceVersion(w.organization, w.workspace)
@@ -52,8 +57,25 @@ func (w *Workspace) GetCurrentVersion() (*SemanticVersion, error) {
 	return cv, nil
 }
 
-// GetLatestVersion get terraform cloud workspace current terraform veresion
+// GetLatestVersion get latest terraform version
 func (w *Workspace) GetLatestVersion() (*SemanticVersion, error) {
+	releases, err := w.tfRelease.List()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range releases {
+		if v.Draft {
+			continue
+		}
+		return v.SemanticVersion, nil
+	}
+
+	return nil, fmt.Errorf("Something is wrong to get latest terraform version")
+}
+
+// GetCompatibleLatestVersion get latest terraform version compatible with required versions
+func (w *Workspace) GetCompatibleLatestVersion() (*SemanticVersion, error) {
 	releases, err := w.tfRelease.List()
 	if err != nil {
 		return nil, err
@@ -83,8 +105,8 @@ func (w *Workspace) UpdateVersion(s *SemanticVersion) error {
 }
 
 // UpdateLatestVersion update terraform cloud workspace terraform to the latest version
-func (w *Workspace) UpdateLatestVersion() (*SemanticVersion, error) {
-	newVersion, err := w.GetLatestVersion()
+func (w *Workspace) UpdateCompatibleLatestVersion() (*SemanticVersion, error) {
+	newVersion, err := w.GetCompatibleLatestVersion()
 	if err != nil {
 		return nil, err
 	}

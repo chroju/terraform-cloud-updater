@@ -53,6 +53,54 @@ func TestGetLatestVersion(t *testing.T) {
 					SemanticVersion: &SemanticVersion{Versions: []int{0, 12}},
 				},
 			},
+			expected: &SemanticVersion{Versions: []int{0, 13, 0}},
+		},
+		{
+			requiredVersions: []*RequiredVersion{
+				{
+					Operator:        "~>",
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 2}},
+				},
+			},
+			expected: &SemanticVersion{Versions: []int{0, 13, 0}},
+		},
+		{
+			requiredVersions: []*RequiredVersion{
+				{
+					Operator:        "~>",
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12, 0}},
+				},
+			},
+			expected: &SemanticVersion{Versions: []int{0, 13, 0}},
+		},
+	}
+
+	w := &Workspace{
+		tfRelease: &TfReleasesMock{},
+	}
+	for _, v := range cases {
+		w.requiredVersions = v.requiredVersions
+		result, err := w.GetLatestVersion()
+		if err != nil {
+			t.Errorf("Failed: requiredVersions = %v / err = %s", v.requiredVersions, err)
+		} else if reflect.DeepEqual(result, &(v.expected)) {
+			t.Errorf("Failed: requiredVersions = %v / want = %v / get = %v", v.requiredVersions, v.expected, result)
+		}
+	}
+}
+
+func TestGetCompatibleLatestVersion(t *testing.T) {
+	cases := []struct {
+		requiredVersions RequiredVersions
+		expected         *SemanticVersion
+	}{
+		{
+			requiredVersions: []*RequiredVersion{
+				{
+					Operator:        "~>",
+					SemanticVersion: &SemanticVersion{Versions: []int{0, 12}},
+				},
+			},
 			expected: &SemanticVersion{Versions: []int{0, 12, 25}},
 		},
 		{
@@ -132,7 +180,7 @@ func TestUpdateVersion(t *testing.T) {
 	}
 }
 
-func TestUpdateLatestVersion(t *testing.T) {
+func TestUpdateCompatibleLatestVersion(t *testing.T) {
 	cases := []struct {
 		requiredVersions RequiredVersions
 		expect           *SemanticVersion
@@ -168,11 +216,11 @@ func TestUpdateLatestVersion(t *testing.T) {
 		_ = w.UpdateVersion(initialVersion)
 
 		w.requiredVersions = v.requiredVersions
-		newVersion, err := w.UpdateLatestVersion()
+		newVersion, err := w.UpdateCompatibleLatestVersion()
 		if err != nil {
 			t.Errorf("Failed: %s / requiredVersions = %v /  want = %v", err.Error(), v.requiredVersions, v.expect)
 		} else if !reflect.DeepEqual(newVersion, v.expect) {
-			t.Errorf("Failed: requiredVersions = %v /  want = %v", v.requiredVersions, v.expect)
+			t.Errorf("Failed: requiredVersions = %v /  want = %v / get = %v", v.requiredVersions, v.expect, newVersion)
 		}
 	}
 }
@@ -192,10 +240,12 @@ func newWorkspaceForTest() (*Workspace, error) {
 	}
 
 	client, _ := NewTfCloud("app.terraform.io", token)
-	config := &Config{
-		Organization: org,
-		Workspace:    workspace,
+	w := &Workspace{
+		client:       client,
+		tfRelease:    &TfReleasesMock{},
+		hostname:     "app.terraform.io",
+		organization: org,
+		workspace:    workspace,
 	}
-	w, _ := NewWorkspace(client, config)
 	return w, nil
 }

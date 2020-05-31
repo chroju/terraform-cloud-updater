@@ -43,9 +43,20 @@ func (c *CheckCommand) Run(args []string) int {
 		return 2
 	}
 
+	compatibleVer, err := ws.GetCompatibleLatestVersion()
+	if err != nil {
+		c.UI.Error(err.Error())
+		return 2
+	}
+
 	if currentVer.String() != latestVer.String() {
 		c.UI.Warn("New version is available.")
-		c.UI.Info(fmt.Sprintf("%s -> %s", currentVer.String(), latestVer.String()))
+		if compatibleVer.String() != latestVer.String() {
+			c.UI.Error(fmt.Sprintf("This version is not compatible with required version %v", ws.GetRequiredVersions().String()))
+			c.UI.Info(fmt.Sprintf("%s -> %s (NOT COMPATIBLE)", currentVer.String(), latestVer.String()))
+		} else {
+			c.UI.Info(fmt.Sprintf("%s -> %s", currentVer.String(), latestVer.String()))
+		}
 	} else {
 		c.UI.Warn("No updates available.")
 	}
