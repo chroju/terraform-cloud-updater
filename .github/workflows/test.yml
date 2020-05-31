@@ -4,7 +4,6 @@ on:
     branches:
       - master
 
-
 jobs:
   test_not_update:
     runs-on: ubuntu-latest
@@ -12,12 +11,12 @@ jobs:
       - uses: actions/checkout@v2
       - name: check version
         id: check
-        uses: chroju/terraform-cloud-updater@1f2b125
+        uses: chroju/terraform-cloud-updater@4c53f35
         with:
+          tfe_token: ${{ secrets.TFE_TOKEN }}
           working_dir: ./terraform
           comment_pr: true
         env:
-          TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: result
         run: echo "${{ steps.check.outputs.output }}"
@@ -28,13 +27,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: check version
         id: check
-        uses: chroju/terraform-cloud-updater@1f2b125
+        uses: chroju/terraform-cloud-updater@4c53f35
         with:
+          tfe_token: ${{ secrets.TFE_TOKEN }}
           working_dir: ./terraform
           force_update: true
           comment_pr: true
         env:
-          TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: result
         run: echo "${{ steps.check.outputs.output }}"
