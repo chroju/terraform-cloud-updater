@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: check version
         id: check
-        uses: chroju/terraform-cloud-updater@4b98889
+        uses: chroju/terraform-cloud-updater@3afd0bd
         with:
           workdir: ./test
           comment_pr: true
       - name: result
         run: echo "${{ steps.check.outputs.result }}"
-        if: "${{ steps.check.outputs.result != '' }}"
+        if: "${{ steps.check.outputs.is_available_update == 'true' }}"
