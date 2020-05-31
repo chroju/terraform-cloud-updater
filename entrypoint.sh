@@ -34,13 +34,16 @@ function main {
         exit 0
     fi
 
-    echo "info: ${output}"
     echo "::set-output name=result::${output}"
+
+    workspaceLink=$(echo "${output}" | tail -n 1)
+    output=$(echo "${output}" | head -n 1)
+    echo "info: ${output}"
 
     if [[ "${commentPR}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
         CommentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
         echo "info: commenting on the pull request"
-        output="{\"body\": \"#### Terraform Cloud Workspace new version detected\n\`\`\`\n${output}\n\`\`\`\n\n*working directory: \`${workdir}\`\"}"
+        output="{\"body\": \"#### Terraform Cloud Workspace new version detected\n\`\`\`\n${output}\n\`\`\`\n\n*working directory: \`${workdir}\`, ${workspaceLink}*\"}"
         echo "${output}"  | curl -XPOST -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" --data @- "${CommentsURL}"
     fi
 }
