@@ -102,13 +102,13 @@ func (w *Workspace) GetCompatibleLatestVersion() (*SemanticVersion, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("No version is consistent with required versions %v", w.requiredVersions)
+	return nil, fmt.Errorf("No version is compatbile with required versions '%v'", w.requiredVersions)
 }
 
 // UpdateVersion update terraform cloud workspace terraform version
 func (w *Workspace) UpdateVersion(s *SemanticVersion) error {
 	if !w.requiredVersions.CheckVersionConsistency(s) {
-		return fmt.Errorf("Version %v is not consistent with required version '%v'", s, w.requiredVersions)
+		return fmt.Errorf("Version %v is not compatbile with required version '%v'", s, w.requiredVersions)
 	}
 	if err := w.client.UpdateWorkspaceVersion(w.organization, w.workspace, s); err != nil {
 		return err
@@ -127,4 +127,9 @@ func (w *Workspace) UpdateCompatibleLatestVersion() (*SemanticVersion, error) {
 		return nil, err
 	}
 	return newVersion, nil
+}
+
+// IsCompatibleVersion returns whether a given veresion is compatible with workspace required version
+func (w *Workspace) IsCompatibleVersion(s *SemanticVersion) bool {
+	return w.requiredVersions.CheckVersionConsistency(s)
 }

@@ -34,28 +34,28 @@ func (c *CheckCommand) Run(args []string) int {
 	currentVer, err := ws.GetCurrentVersion()
 	if err != nil {
 		c.UI.Error(err.Error())
-		return 2
+		return 1
 	}
 
 	latestVer, err := ws.GetLatestVersion()
 	if err != nil {
 		c.UI.Error(err.Error())
-		return 2
+		return 1
 	}
 
 	compatibleVer, err := ws.GetCompatibleLatestVersion()
 	if err != nil {
 		c.UI.Error(err.Error())
-		return 2
+		return 1
 	}
 
 	if currentVer.String() != latestVer.String() {
 		c.UI.Warn("New version is available.")
 		if compatibleVer.String() != latestVer.String() {
 			c.UI.Error("This version is not compatible with required version.")
-			c.UI.Info(fmt.Sprintf("%s -> %s (WARN: required version is %s)", currentVer.String(), latestVer.String(), ws.GetRequiredVersions().String()))
+			c.UI.Info(fmt.Sprintf("Found: %s -> %s (WARN: required version is %s)", currentVer.String(), latestVer.String(), ws.GetRequiredVersions().String()))
 		} else {
-			c.UI.Info(fmt.Sprintf("%s -> %s", currentVer.String(), latestVer.String()))
+			c.UI.Info(fmt.Sprintf("Found: %s -> %s", currentVer.String(), latestVer.String()))
 		}
 		c.UI.Info(fmt.Sprintf("\nLink to: %s", ws.GetSettingsLink()))
 	} else {

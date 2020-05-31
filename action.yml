@@ -1,5 +1,5 @@
 name: "Terraform Cloud Workspace Auto Update"
-description: "Updates Terraform Cloud workspace terraform version based on the remote config file"
+description: "Automates the terraform version update of your Terraform cloud workspace"
 author: "chroju <chor.chroju@gmail.com"
 branding:
   icon: "chevrons-up"

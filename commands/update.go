@@ -16,7 +16,7 @@ type UpdateCommand struct {
 
 func (c *UpdateCommand) Run(args []string) int {
 	var root, token string
-	var semver *updater.SemanticVersion
+	var updateVer *updater.SemanticVersion
 
 	currentDir, _ := os.Getwd()
 	f := flag.NewFlagSet("check", flag.ExitOnError)
@@ -34,37 +34,48 @@ func (c *UpdateCommand) Run(args []string) int {
 	}
 
 	if args[0] == "latest" {
-		semver, err = ws.GetLatestVersion()
+		updateVer, err = ws.GetLatestVersion()
 		if err != nil {
 			c.UI.Error(err.Error())
-			return 2
+			return 1
 		}
 	} else {
-		semver, err = updater.NewSemanticVersion(args[0])
+		updateVer, err = updater.NewSemanticVersion(args[0])
 		if err != nil {
 			c.UI.Error(fmt.Sprintf("%s is not valid version", args[0]))
 			c.UI.Output(helpMessageUpdate)
-			return 2
+			return 1
 		}
 	}
 
 	currentVer, err := ws.GetCurrentVersion()
 	if err != nil {
 		c.UI.Error(err.Error())
-		return 2
+		return 1
 	}
 
-	if currentVer.String() == semver.String() {
-		c.UI.Warn("No updates available.")
+	if currentVer.String() == updateVer.String() {
+		c.UI.Warn(fmt.Sprintf("Already latest version %s", updateVer.String()))
 		return 0
 	}
 
-	if err = ws.UpdateVersion(semver); err != nil {
+	if !ws.IsCompatibleVersion(updateVer) {
+		c.UI.Error("This version is not compatible with required version.")
+		if args[0] == "latest" {
+			c.UI.Info(fmt.Sprintf("New version %s is available, but it is not compatible with required version %s", updateVer.String(), ws.GetRequiredVersions().String()))
+		} else {
+			c.UI.Error(fmt.Sprintf("Version %s is not compatible with required version %s", updateVer.String(), ws.GetRequiredVersions().String()))
+		}
+		c.UI.Info(fmt.Sprintf("\nLink to: %s", ws.GetSettingsLink()))
+		return 3
+	}
+
+	if err = ws.UpdateVersion(updateVer); err != nil {
 		c.UI.Error(err.Error())
 		return 2
 	}
 
-	c.UI.Info(fmt.Sprintf("Updated: %s -> %s", currentVer, semver))
+	c.UI.Info(fmt.Sprintf("Updated: %s -> %s", currentVer, updateVer))
 	c.UI.Info(fmt.Sprintf("\nLink to: %s", ws.GetSettingsLink()))
 	return 0
 }
