@@ -8,11 +8,6 @@ function parseInputs {
         subcommand="update ${INPUT_SPECIFIC_VERSION}"
     fi
 
-    tfetoken=""
-    if [[ -n "${INPUT_TFE_TOKEN}" ]]; then
-        tfetoken=${INPUT_TFE_TOKEN}
-    fi
-
     workdir="./"
     if [[ -n "${INPUT_WORKDIR}" ]]; then
         workdir=${INPUT_WORKDIR}
@@ -26,7 +21,7 @@ function parseInputs {
 
 function main {
     parseInputs
-    output=$(go run main.go ${subcommand} --token ${tfetoken} --root-path ${workdir} 2> /dev/null)
+    output=$(go run main.go ${subcommand} --token ${TFE_TOKEN} --root-path ${workdir} 2> /dev/null)
     exitCode=${?}
 
     if [ ${exitCode} -ne 0 ]; then
@@ -45,7 +40,7 @@ function main {
     if [[ "${commentPR}" == "true" ]] && [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
         CommentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
         echo "info: commenting on the pull request"
-        output="{\"body\": \"## Terraform Cloud Workspace new version detected\n* dir: `${workdir}`\n* ${output}\"}"
+        output="{\"body\": \"#### Terraform Cloud Workspace new version detected\n\`\`\`\n${output}\n\`\`\`\n\n*working directory: \`${workdir}\`\"}"
         echo "${output}"  | curl -XPOST -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" --data @- "${CommentsURL}"
     fi
 }
