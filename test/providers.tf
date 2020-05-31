@@ -7,5 +7,5 @@ terraform {
       name = "sample"
     }
   }
-  required_version = "> 0.12.0, <= 0.12.23"
+  required_version = "> 0.12.0, <= 0.12.24"
 }
