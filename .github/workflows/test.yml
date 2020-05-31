@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: check version
         id: check
-        uses: chroju/terraform-cloud-updater@45ce947c93304009c44d11a7f84fe03201bdb063
+        uses: chroju/terraform-cloud-updater@4b98889
         with:
           workdir: ./test
           comment_pr: true
