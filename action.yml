@@ -8,8 +8,8 @@ inputs:
   working_dir:
     description: "Terraform working directory"
     default: "./"
-  force_update:
-    description: "Force to update the latest version compatible with required versions"
+  auto_update:
+    description: "Whether automatically update Terraform Cloud workspace to the latest version compatible with required version"
     default: false
   comment_pr:
     description: "Whether or not to post a comment on GitHub pull requests"

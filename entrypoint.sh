@@ -2,7 +2,7 @@
 
 function parseInputs {
     subcommand="check"
-    if [[ "${INPUT_FORCE_UPDATE}" == "true" ]]; then
+    if [[ "${INPUT_AUTO_UPDATE}" == "true" ]]; then
         subcommand="update latest"
     elif [[ -n "${INPUT_SPECIFIC_VERSION}" ]]; then
         subcommand="update ${INPUT_SPECIFIC_VERSION}"
