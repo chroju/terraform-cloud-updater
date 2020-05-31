@@ -8,6 +8,13 @@ function parseInputs {
         subcommand="update ${INPUT_SPECIFIC_VERSION}"
     fi
 
+    if [[ -n "${INPUT_TFE_TOKEN}" ]]; then
+        tfe_token=${INPUT_TFE_TOKEN}
+    else
+        echo "error: tfe_token is not found"
+        exit 1
+    fi
+
     workdir="./"
     if [[ -n "${INPUT_WORKING_DIR}" ]]; then
         workdir=${INPUT_WORKING_DIR}
@@ -21,7 +28,7 @@ function parseInputs {
 
 function main {
     parseInputs
-    output=$(go run main.go ${subcommand} --token ${TFE_TOKEN} --root-path ${workdir} 2> /dev/null)
+    output=$(go run main.go ${subcommand} --token ${tfe_token} --root-path ${workdir} 2> /dev/null)
     exitCode=${?}
 
     if [ ${exitCode} -ne 0 ] && [ ${exitCode} -ne 3 ]; then

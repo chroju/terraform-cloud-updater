@@ -1,10 +1,13 @@
 name: "Terraform Cloud Workspace Auto Update"
 description: "Automates the terraform version update of your Terraform cloud workspace"
-author: "chroju <chor.chroju@gmail.com"
+author: "chroju <chor.chroju@gmail.com>"
 branding:
   icon: "chevrons-up"
   color: "purple"
 inputs:
+  tfe_token:
+    description: "Terraform Cloud API token"
+    required: true
   working_dir:
     description: "Terraform working directory"
     default: "./"
