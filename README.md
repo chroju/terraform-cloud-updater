@@ -1,6 +1,10 @@
 terraform-cloud-updater
 ======
 
+> [!WARNING]
+> **This project is no longer maintained and this repository has been archived.**
+> The `v1` tag keeps working for existing workflows, but it will not receive any updates.
+
 This action automates the terraform version update of your Terraform cloud workspace, based on the remote config file.
 
 ## Usage
